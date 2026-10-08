@@ -1,0 +1,45 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model User {
+  id        String   @id @default(uuid())
+  phone     String   @unique
+  name      String?
+  role      String   @default("USER") // USER, B2B, ADMIN, COLLECTOR
+  balance   Int      @default(0)    // Token balance
+  createdAt DateTime @default(now())
+
+  wasteLogs WasteLog[]
+  pickups   Pickup[]
+}
+
+model WasteLog {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  type      String   // PET, Cardboard, Glass, Metal
+  imageUrl  String
+  imageHash String?  // For duplicate detection (CV guardrail stub)
+  status    String   @default("PENDING") // PENDING, VERIFIED, REJECTED
+  tokens    Int      @default(0)       // Tokens awarded
+  createdAt DateTime @default(now())
+}
+
+model Pickup {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  latitude    Float
+  longitude   Float
+  address     String
+  materials   String   // Comma-separated list for SQLite compatibility
+  scheduleAt  DateTime
+  status      String   @default("SCHEDULED") // SCHEDULED, COMPLETED, CANCELLED
+  createdAt   DateTime @default(now())
+}
